@@ -1,11 +1,13 @@
-LIME.FlatShader = function(r, g, b, a) {
+LIME.FlatShader = function(geometry, gl, r, g, b, a) {
 
+  this.context = gl;
   this.program;
   this.vertexColor = [];
   this.red = r;
   this.green = g;
   this.blue = b;
   this.alpha = a;
+  this.n = geometry.getArraySize() / 3;
 
   var VSHADER_SOURCE = 
   'attribute vec4 a_Position;\n' +
@@ -31,15 +33,16 @@ LIME.FlatShader = function(r, g, b, a) {
     console.log('Failed to create program');
     return false;
   }
+
   this.program = program;
 
   this.getColorArray = function(n) {
-    for(var i = 0; i < n; i++)
+    for(var i = 0; i < this.n; i++)
     {
-      vertexColor.push(r);
-      vertexColor.push(g);
-      vertexColor.push(b);
-      vertexColor.push(a);
+      this.vertexColor.push(r);
+      this.vertexColor.push(g);
+      this.vertexColor.push(b);
+      this.vertexColor.push(a);
     }
     return new Float32Array(this.vertexColor);
   }

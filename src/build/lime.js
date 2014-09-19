@@ -80,14 +80,16 @@ LIME.Geometry = function() {
       return this.vertices.length;
    }
 };
-LIME.FlatShader = function(r, g, b, a) {
+LIME.FlatShader = function(geometry, gl, r, g, b, a) {
 
+  this.context = gl;
   this.program;
   this.vertexColor = [];
   this.red = r;
   this.green = g;
   this.blue = b;
   this.alpha = a;
+  this.n = geometry.getArraySize() / 3;
 
   var VSHADER_SOURCE = 
   'attribute vec4 a_Position;\n' +
@@ -113,15 +115,16 @@ LIME.FlatShader = function(r, g, b, a) {
     console.log('Failed to create program');
     return false;
   }
+
   this.program = program;
 
   this.getColorArray = function(n) {
-    for(var i = 0; i < n; i++)
+    for(var i = 0; i < this.n; i++)
     {
-      vertexColor.push(r);
-      vertexColor.push(g);
-      vertexColor.push(b);
-      vertexColor.push(a);
+      this.vertexColor.push(r);
+      this.vertexColor.push(g);
+      this.vertexColor.push(b);
+      this.vertexColor.push(a);
     }
     return new Float32Array(this.vertexColor);
   }
@@ -130,37 +133,37 @@ LIME.FlatShader = function(r, g, b, a) {
     return this.program;
   }
 }
-LIME.Shape = function(geomerty, material, gl, drawType) {
-   this.geomerty = geometry;
+LIME.Shape = function(geometry, material, gl, drawType) {
+   this.geometry = geometry;
    this.material = material;
    this.context = gl;
    this.modelMatrix = new Matrix4();
-   this.u_ModelMatrix = context.getUniformLocation(material.getProgram(), 'u_ModelMatrix');
+   this.u_ModelMatrix = this.context.getUniformLocation(material.getProgram(), 'u_ModelMatrix');
 
    switch(drawType) {
       case 0:
-         this.drawType = context.POINTS;
+         this.drawType = this.context.POINTS;
          break;
       case 1:
-         this.drawType = context.LINES;
+         this.drawType = this.context.LINES;
          break;
       case 2:
-         this.drawType = context.LINE_STRIP;
+         this.drawType = this.context.LINE_STRIP;
          break;
       case 3:
-         this.drawType = context.LINE_LOOP;
+         this.drawType = this.context.LINE_LOOP;
          break;
       case 4:
-         this.drawType = context.TRIANGLES;
+         this.drawType = this.context.TRIANGLES;
          break;
       case 5:
-         this.drawType = context.TRIANGLE_STRIP;
+         this.drawType = this.context.TRIANGLE_STRIP;
          break;
       case 6:
-         this.drawType = context.TRIANGLE_FAN;
+         this.drawType = this.context.TRIANGLE_FAN;
          break;
       default:
-         this.drawType = context.POINTS;
+         this.drawType = this.context.POINTS;
    }
 
    var gl = this.context;
@@ -170,9 +173,9 @@ LIME.Shape = function(geomerty, material, gl, drawType) {
       return;
    }
 
-   n = this.geometry.getArraySize() / 3;
+   var n = this.geometry.getArraySize() / 3;
 
-   this.vertexArray = this.geometry.getGemetry();
+   this.vertexArray = this.geometry.getGeometry();
 
    this.colorArray = this.material.getColorArray();
 
@@ -188,20 +191,22 @@ LIME.Shape = function(geomerty, material, gl, drawType) {
       return -1;
    }
 
-   this.a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+   this.a_Position = gl.getAttribLocation(this.material.getProgram(), 'a_Position');
    if (this.a_Position < 0) {
       console.log('Failed to get the storage location of a_Position');
       return -1;
    }
 
-   this.a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+   this.a_Color = gl.getAttribLocation(this.material.getProgram(), 'a_Color');
    if (this.a_Color < 0) {
       console.log('Failed to get the storage location of a_Position');
       return -1;
    }
 
    this.draw = function() {
-      var gl = this.context;  
+      var gl = this.context;
+
+      gl.useProgram(this.material.getProgram());
 
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, this.vertexArray, gl.STATIC_DRAW);
@@ -214,7 +219,7 @@ LIME.Shape = function(geomerty, material, gl, drawType) {
       gl.enableVertexAttribArray(this.a_Color);
 
       gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
-      gl.drawArrays(this.drawType, 0, this.vertices.length / 3);
+      gl.drawArrays(this.drawType, 0, n);
    };
 
    this.setRotation = function(angle, x, y, z){
