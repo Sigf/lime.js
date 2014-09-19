@@ -5,9 +5,9 @@ WebGL rendering framework that I am making to learn about WebGL and good project
 
 Credits:
 -----
-* I used some utilities libraries Taken from the book "WebGL Programming Guide" by Kouichi Matsuda and Rodger Lea
+* I used some utilities libraries taken from the book "WebGL Programming Guide" by Kouichi Matsuda and Rodger Lea
 
-* I am trying to emulate and learn from the coding style of the three.js librairy made by mrdoob.
+* I am trying to emulate and learn from the coding style of the three.js library made by mrdoob.
 
 Reference:
 ----
@@ -19,3 +19,4 @@ Features so far:
 * Can draw very simple shapes
 * Color can be changed
 * Convert user mouse coordinate into webgl unit
+* Shapes can be scaled, rotated and translated
