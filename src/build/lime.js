@@ -1,6 +1,6 @@
 // @author Sebastien Hutt
 
-var LIME = { REVISION: '01' };
+var LIME = { REVISION: '02' };
 
 // draw type constants
 LIME.drawPoints = 0;
@@ -10,77 +10,108 @@ LIME.drawLineLoop = 3;
 LIME.drawTriangles = 4;
 LIME.drawTriangleStrip = 5;
 LIME.drawTriangleFan = 6;
-LIME.Geometry = function() {
+
+// geometry type constants
+LIME.faltShader = 0;
+LIME.perPixelColorShader = 1;
+LIME.Geometry = function(scene) {
+   this.vertices = [];
+   this.ratio = scene.getAspectRatio();
+};
+
+LIME.Geometry.prototype.createRectangle = function(length, width, zOffset) {
    this.vertices = [];
 
-   this.createRectangle = function(length, width, zOffset) {
-      this.vertices = [];
+   if (zOffset == undefined) zOffset = 0.0;
 
-      if (zOffset == undefined) zOffset = 0.0;
+   this.vertices.push(-(width/2), -(length/2), 0.0);
+   this.vertices.push(-(width/2), (length/2), 0.0);
+   this.vertices.push((width/2), (length/2), 0.0);
+   this.vertices.push((width/2), -(length/2), 0.0);
+};
 
-      this.vertices.push(-(width/2), -(length/2), 0.0);
-      this.vertices.push(-(width/2), (length/2), 0.0);
-      this.vertices.push((width/2), (length/2), 0.0);
-      this.vertices.push((width/2), -(length/2), 0.0);
-   };
+LIME.Geometry.prototype.createTriangle = function(length, width, zOffset) {
+   this.vertices = [];
 
-   this.createTriangle = function(length, width, zOffset) {
-      this.vertices = [];
+   if (zOffset == undefined) zOffset = 0.0;
 
-      if (zOffset == undefined) zOffset = 0.0;
+   this.vertices.push(-(width/2), -(length/2), 0.0);
+   this.vertices.push((width/2), -(length/2), 0.0);
+   this.vertices.push(0.0, (length/2), 0.0);
+};
 
-      this.vertices.push(-(width/2), -(length/2), 0.0);
-      this.vertices.push((width/2), -(length/2), 0.0);
-      this.vertices.push(0.0, (length/2), 0.0);
-   };
+LIME.Geometry.prototype.createCube = function(length, width, depth) {
+   this.vertices = [];
 
-   this.createCube = function(length, width, depth) {
-      this.vertices = [];
+   var l = length/2;
+   var w = width/2;
+   var d = depth/2;
 
-      var l = length/2;
-      var w = width/2;
-      var d = depth/2;
+   this.vertices.push(-l, -w, d);
+   this.vertices.push(-l, w, d);
+   this.vertices.push(l, -w, d);
+   this.vertices.push(l, w, d);
 
-      this.vertices.push(-l, -w, d);
-      this.vertices.push(-l, w, d);
-      this.vertices.push(l, -w, d);
-      this.vertices.push(l, w, d);
+   this.vertices.push(l, -w, d);
+   this.vertices.push(l, w, d);
+   this.vertices.push(l, -w, -d);
+   this.vertices.push(l, w, -d);
 
-      this.vertices.push(l, -w, d);
-      this.vertices.push(l, w, d);
-      this.vertices.push(l, -w, -d);
-      this.vertices.push(l, w, -d);
+   this.vertices.push(l, -w, -d);
+   this.vertices.push(l, w, -d);
+   this.vertices.push(-l, -w, -d);
+   this.vertices.push(-l, w, -d);
 
-      this.vertices.push(l, -w, -d);
-      this.vertices.push(l, w, -d);
-      this.vertices.push(-l, -w, -d);
-      this.vertices.push(-l, w, -d);
+   this.vertices.push(-l,-w, -d);
+   this.vertices.push(-l, w, -d);
+   this.vertices.push(-l, -w, d);
+   this.vertices.push(-l, w, d);
 
-      this.vertices.push(-l,-w, -d);
-      this.vertices.push(-l, w, -d);
-      this.vertices.push(-l, -w, d);
-      this.vertices.push(-l, w, d);
+   this.vertices.push(-l, -w, d);
+   this.vertices.push(l, -w, d);
+   this.vertices.push(-l, -w, -d);
+   this.vertices.push(l, -w, -d);
 
-      this.vertices.push(-l, -w, d);
-      this.vertices.push(l, -w, d);
-      this.vertices.push(-l, -w, -d);
-      this.vertices.push(l, -w, -d);
+   this.vertices.push(-l, w, d);
+   this.vertices.push(l, w, d);
+   this.vertices.push(-l, w, -d);
+   this.vertices.push(l, w, -d);
+};
 
-      this.vertices.push(-l, w, d);
-      this.vertices.push(l, w, d);
-      this.vertices.push(-l, w, -d);
-      this.vertices.push(l, w, -d);
-   };
+LIME.Geometry.prototype.createCircle = function(radius, segments) {
+   this.vertices = [];
+   var angle = 0;
 
-   this.getGeometry = function() {
-      return new Float32Array(this.vertices);
-   }
+   this.vertices.push(0.0, 0.0, 0.0);
 
-   this.getArraySize = function() {
-      return this.vertices.length;
+   for(var i = 0; i < segments + 1; i++){
+      angle = ((2*Math.PI) / segments)*i;
+      this.vertices.push(radius * Math.cos(angle), radius * Math.sin(angle), 0.0);
    }
 };
-LIME.FlatShader = function(geometry, gl, r, g, b, a) {
+
+LIME.Geometry.prototype.addPoints = function(points, clear) {
+   if (clear) this.vertices = [];
+   for(var i = 0; i < points.length/3; i++) {
+      this.vertices.push(points[0 + 3*i], points[1 + 3*i], points[2 + 3*i]);
+   }
+};
+
+LIME.Geometry.prototype.getGeometry = function() {
+   //this.applyAspectRatio();
+   return new Float32Array(this.vertices);
+};
+
+LIME.Geometry.prototype.getArraySize = function() {
+   return this.vertices.length;
+};
+
+LIME.Geometry.prototype.applyAspectRatio = function() {
+   for(var i = 0; i < this.vertices.length/3; i++) {
+      this.vertices[0 + 3*i] *= this.ratio[1];
+   }
+}
+ LIME.FlatShader = function(geometry, gl, r, g, b, a) {
 
   this.context = gl;
   this.program;
@@ -99,6 +130,7 @@ LIME.FlatShader = function(geometry, gl, r, g, b, a) {
   'void main() {\n' +
   '  gl_Position = u_ModelMatrix * a_Position;\n' +
   '  v_Color = a_Color;\n' +
+  '  gl_PointSize = 5.0;\n' +
   '}\n' ;
 
   var FSHADER_SOURCE =
@@ -115,25 +147,28 @@ LIME.FlatShader = function(geometry, gl, r, g, b, a) {
     console.log('Failed to create program');
     return false;
   }
-
   this.program = program;
+};
 
-  this.getColorArray = function(n) {
-    for(var i = 0; i < this.n; i++)
-    {
-      this.vertexColor.push(r);
-      this.vertexColor.push(g);
-      this.vertexColor.push(b);
-      this.vertexColor.push(a);
-    }
-    return new Float32Array(this.vertexColor);
+LIME.FlatShader.prototype.getColorArray = function(n) {
+  for(var i = 0; i < this.n; i++)
+  {
+    this.vertexColor.push(this.red);
+    this.vertexColor.push(this.green);
+    this.vertexColor.push(this.blue);
+    this.vertexColor.push(this.alpha);
   }
+  return new Float32Array(this.vertexColor);
+}
 
-  this.getProgram = function() {
-    return this.program;
-  }
+LIME.FlatShader.prototype.getProgram = function() {
+  return this.program;
 }
 LIME.Shape = function(geometry, material, gl, drawType) {
+   this.x;
+   this.y;
+   this.z;
+   this.hitbox = [];
    this.geometry = geometry;
    this.material = material;
    this.context = gl;
@@ -173,8 +208,6 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       return;
    }
 
-   var n = this.geometry.getArraySize() / 3;
-
    this.vertexArray = this.geometry.getGeometry();
 
    this.colorArray = this.material.getColorArray();
@@ -202,49 +235,95 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       console.log('Failed to get the storage location of a_Position');
       return -1;
    }
+}
 
-   this.draw = function() {
-      var gl = this.context;
+LIME.Shape.prototype.generateHitbox = function() {
+   /*var min_x = 0.0;
+   var min_y = 0.0;
+   var max_x = 0.0;
+   var max_y = 0.0;
 
-      gl.useProgram(this.material.getProgram());
+   var points = this.geometry.getGeometry();
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.vertexArray, gl.STATIC_DRAW);
-      gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(this.a_Position);
+   for(var i = 0; i < points.length/3; i++) {
+      if((points[0 + (3*i)] + this.x) > max_x) max_x = points[0 + (3*i)];
+      if((points[0 + (3*i)] + this.x) < min_x) min_x = points[0 + (3*i)];
+      if((points[1 + (3*i)] + this.y) < min_y) min_y = points[0 + (3*i)];
+        if((points[1 + (3*i)] + this.y) < min_y) min_y = points[0 + (3*i)];
+   }
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
-      gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(this.a_Color);
+   this.hitbox.push(min_x);
+   this.hitbox.push(min_y);
+   this.hitbox.push(max_x);
+   this.hitbox.push(max_y);*/
 
-      gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
-      gl.drawArrays(this.drawType, 0, n);
-   };
+   this.hitbox = [];
 
-   this.setRotation = function(angle, x, y, z){
-      this.modelMatrix.setRotate(angle, x, y, z);
-   };
+   this.hitbox.push(this.x);
+   this.hitbox.push(this.y);
+   this.hitbox.push(this.x + 0.16);
+   this.hitbox.push(this.y + 0.1);
+}
 
-   this.rotate = function(angle, x, y, z){
-      this.modelMatrix.rotate(angle, x, y, z);
-   };
+LIME.Shape.prototype.draw = function(offset, frame_size) {
+   var gl = this.context;
+   if(frames == undefined) frames = 1;
+   if(frame_size == undefined) var n = this.geometry.getArraySize() / 3; 
+   else var n = frame_size;
+   if(offset == undefined) offset = 0;
 
-   this.setPosition = function(x, y, z){
-      this.modelMatrix.setTranslate(x, y, z);
-   };
+   gl.useProgram(this.material.getProgram());
 
-   this.translate = function(x, y, z){
-      this.modelMatrix.translate(x, y, z);
-   };
+   gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, this.vertexArray, gl.STATIC_DRAW);
+   gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
+   gl.enableVertexAttribArray(this.a_Position);
 
-   this.setScale = function(x, y, z){
-      this.modelMatrix.setScale(x, y, z);
-   };
+   gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
+   gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
+   gl.enableVertexAttribArray(this.a_Color);
 
-   this.scale = function(x, y, z){
-      this.modelMatrix.scale(x, y, z);
-   };
+   gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
+   gl.drawArrays(this.drawType, offset  , n);
+};
+
+LIME.Shape.prototype.setRotation = function(angle, x, y, z){
+   this.modelMatrix.setRotate(angle, x, y, z);
+};
+
+LIME.Shape.prototype.rotate = function(angle, x, y, z){
+   this.modelMatrix.rotate(angle, x, y, z);
+};
+
+LIME.Shape.prototype.setPosition = function(x, y, z){
+   this.modelMatrix.setTranslate(x, y, z);
+   this.x = x;
+   this.y = y;
+   this.z = z;
+};
+
+LIME.Shape.prototype.translate = function(x, y, z){
+   this.modelMatrix.translate(x, y, z);
+   this.x += x;
+   this.y += y;
+   this.z += z;
+};
+
+LIME.Shape.prototype.setScale = function(x, y, z){
+   this.modelMatrix.setScale(x, y, z);
+};
+
+LIME.Shape.prototype.scale = function(x, y, z){
+   this.modelMatrix.scale(x, y, z);
+};
+
+LIME.Shape.prototype.getLocation = function() {
+   return [this.x, this.y, this.z];
+};
+
+LIME.Shape.prototype.getHitbox = function() {
+   return this.hitbox;
 };
 LIME.Scene = function (canvasName) {
   this.canvas = document.getElementById(canvasName);
@@ -252,34 +331,36 @@ LIME.Scene = function (canvasName) {
 
   this.context.clearColor(0.0, 0.0, 0.0, 1.0);
   this.context.enable(this.context.DEPTH_TEST);
+};
+LIME.Scene.prototype.getContext = function() {
+  return this.context;
+};
 
-  this.getContext = function() {
-    return this.context;
-  };
+LIME.Scene.prototype.getCanvas = function() {
+  return this.canvas;
+};
 
-  this.getCanvas = function() {
-    return this.canvas;
-  };
+LIME.Scene.prototype.clearCanvas = function() {
+  this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT);
+};
 
+LIME.Scene.prototype.setClearColor = function(r, g, b, a) {
+  this.context.clearColor(r, g, b, a);
+};
 
-  this.clearCanvas = function() {
-    this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT);
-  };
+LIME.Scene.prototype.getMouseCoordinate = function(ev, canvas) {
+  var x = ev.clientX;
+  var y = ev.clientY;
+  var rect = ev.target.getBoundingClientRect() ;
 
-  this.setClearColor = function(r, g, b, a) {
-    this.context.clearColor(r, g, b, a);
-  };
+ x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+ y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
-  this.getMouseCoordinate = function(ev, canvas) {
-    var x = ev.clientX;
-    var y = ev.clientY;
-    var rect = ev.target.getBoundingClientRect() ;
+ return [x, y];
+};
 
-   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-
-   return [x, y];
-  };
+LIME.Scene.prototype.getAspectRatio = function() {
+  return [this.canvas.width/this.canvas.height, this.canvas.height/this.canvas.width];
 };
 // cuon-matrix.js (c) 2012 kanda and matsuda
 /** 

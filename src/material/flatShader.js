@@ -1,4 +1,8 @@
-LIME.FlatShader = function(geometry, gl, r, g, b, a) {
+ // TODO
+ // Split this class into 2, make the flat shader using a non varying variable
+ // for the color and hard code the color in the shader from input. So we don't
+ // need to pass the geometry for every shapes if the color is the same per vertex.
+ LIME.FlatShader = function(geometry, gl, r, g, b, a) {
 
   this.context = gl;
   this.program;
@@ -17,6 +21,7 @@ LIME.FlatShader = function(geometry, gl, r, g, b, a) {
   'void main() {\n' +
   '  gl_Position = u_ModelMatrix * a_Position;\n' +
   '  v_Color = a_Color;\n' +
+  '  gl_PointSize = 5.0;\n' +
   '}\n' ;
 
   var FSHADER_SOURCE =
@@ -33,21 +38,20 @@ LIME.FlatShader = function(geometry, gl, r, g, b, a) {
     console.log('Failed to create program');
     return false;
   }
-
   this.program = program;
+};
 
-  this.getColorArray = function(n) {
-    for(var i = 0; i < this.n; i++)
-    {
-      this.vertexColor.push(r);
-      this.vertexColor.push(g);
-      this.vertexColor.push(b);
-      this.vertexColor.push(a);
-    }
-    return new Float32Array(this.vertexColor);
+LIME.FlatShader.prototype.getColorArray = function(n) {
+  for(var i = 0; i < this.n; i++)
+  {
+    this.vertexColor.push(this.red);
+    this.vertexColor.push(this.green);
+    this.vertexColor.push(this.blue);
+    this.vertexColor.push(this.alpha);
   }
+  return new Float32Array(this.vertexColor);
+}
 
-  this.getProgram = function() {
-    return this.program;
-  }
+LIME.FlatShader.prototype.getProgram = function() {
+  return this.program;
 }

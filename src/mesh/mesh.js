@@ -1,4 +1,8 @@
 LIME.Shape = function(geometry, material, gl, drawType) {
+   this.x;
+   this.y;
+   this.z;
+   this.hitbox = [];
    this.geometry = geometry;
    this.material = material;
    this.context = gl;
@@ -38,8 +42,6 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       return;
    }
 
-   var n = this.geometry.getArraySize() / 3;
-
    this.vertexArray = this.geometry.getGeometry();
 
    this.colorArray = this.material.getColorArray();
@@ -67,47 +69,93 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       console.log('Failed to get the storage location of a_Position');
       return -1;
    }
+}
 
-   this.draw = function() {
-      var gl = this.context;
+LIME.Shape.prototype.generateHitbox = function() {
+   /*var min_x = 0.0;
+   var min_y = 0.0;
+   var max_x = 0.0;
+   var max_y = 0.0;
 
-      gl.useProgram(this.material.getProgram());
+   var points = this.geometry.getGeometry();
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.vertexArray, gl.STATIC_DRAW);
-      gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(this.a_Position);
+   for(var i = 0; i < points.length/3; i++) {
+      if((points[0 + (3*i)] + this.x) > max_x) max_x = points[0 + (3*i)];
+      if((points[0 + (3*i)] + this.x) < min_x) min_x = points[0 + (3*i)];
+      if((points[1 + (3*i)] + this.y) < min_y) min_y = points[0 + (3*i)];
+        if((points[1 + (3*i)] + this.y) < min_y) min_y = points[0 + (3*i)];
+   }
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
-      gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(this.a_Color);
+   this.hitbox.push(min_x);
+   this.hitbox.push(min_y);
+   this.hitbox.push(max_x);
+   this.hitbox.push(max_y);*/
 
-      gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
-      gl.drawArrays(this.drawType, 0, n);
-   };
+   this.hitbox = [];
 
-   this.setRotation = function(angle, x, y, z){
-      this.modelMatrix.setRotate(angle, x, y, z);
-   };
+   this.hitbox.push(this.x);
+   this.hitbox.push(this.y);
+   this.hitbox.push(this.x + 0.16);
+   this.hitbox.push(this.y + 0.1);
+}
 
-   this.rotate = function(angle, x, y, z){
-      this.modelMatrix.rotate(angle, x, y, z);
-   };
+LIME.Shape.prototype.draw = function(offset, frame_size) {
+   var gl = this.context;
+   if(frames == undefined) frames = 1;
+   if(frame_size == undefined) var n = this.geometry.getArraySize() / 3; 
+   else var n = frame_size;
+   if(offset == undefined) offset = 0;
 
-   this.setPosition = function(x, y, z){
-      this.modelMatrix.setTranslate(x, y, z);
-   };
+   gl.useProgram(this.material.getProgram());
 
-   this.translate = function(x, y, z){
-      this.modelMatrix.translate(x, y, z);
-   };
+   gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, this.vertexArray, gl.STATIC_DRAW);
+   gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
+   gl.enableVertexAttribArray(this.a_Position);
 
-   this.setScale = function(x, y, z){
-      this.modelMatrix.setScale(x, y, z);
-   };
+   gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
+   gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
+   gl.enableVertexAttribArray(this.a_Color);
 
-   this.scale = function(x, y, z){
-      this.modelMatrix.scale(x, y, z);
-   };
+   gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
+   gl.drawArrays(this.drawType, offset  , n);
+};
+
+LIME.Shape.prototype.setRotation = function(angle, x, y, z){
+   this.modelMatrix.setRotate(angle, x, y, z);
+};
+
+LIME.Shape.prototype.rotate = function(angle, x, y, z){
+   this.modelMatrix.rotate(angle, x, y, z);
+};
+
+LIME.Shape.prototype.setPosition = function(x, y, z){
+   this.modelMatrix.setTranslate(x, y, z);
+   this.x = x;
+   this.y = y;
+   this.z = z;
+};
+
+LIME.Shape.prototype.translate = function(x, y, z){
+   this.modelMatrix.translate(x, y, z);
+   this.x += x;
+   this.y += y;
+   this.z += z;
+};
+
+LIME.Shape.prototype.setScale = function(x, y, z){
+   this.modelMatrix.setScale(x, y, z);
+};
+
+LIME.Shape.prototype.scale = function(x, y, z){
+   this.modelMatrix.scale(x, y, z);
+};
+
+LIME.Shape.prototype.getLocation = function() {
+   return [this.x, this.y, this.z];
+};
+
+LIME.Shape.prototype.getHitbox = function() {
+   return this.hitbox;
 };

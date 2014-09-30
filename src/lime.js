@@ -1,6 +1,6 @@
 // @author Sebastien Hutt
 
-var LIME = { REVISION: '01' };
+var LIME = { REVISION: '02' };
 
 // draw type constants
 LIME.drawPoints = 0;
@@ -10,3 +10,7 @@ LIME.drawLineLoop = 3;
 LIME.drawTriangles = 4;
 LIME.drawTriangleStrip = 5;
 LIME.drawTriangleFan = 6;
+
+// geometry type constants
+LIME.faltShader = 0;
+LIME.perPixelColorShader = 1;
