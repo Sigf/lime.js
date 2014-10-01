@@ -19,7 +19,7 @@ LIME.Geometry.prototype.createTriangle = function(length, width, zOffset) {
 
    if (zOffset == undefined) zOffset = 0.0;
 
-   this.vertices.push(-(width/2), -(length/2), 0.0);
+   this.vertices.push(-(width/2), -(length/2), 0.0);    
    this.vertices.push((width/2), -(length/2), 0.0);
    this.vertices.push(0.0, (length/2), 0.0);
 };
@@ -94,4 +94,12 @@ LIME.Geometry.prototype.applyAspectRatio = function() {
    for(var i = 0; i < this.vertices.length/3; i++) {
       this.vertices[0 + 3*i] *= this.ratio[1];
    }
-}
+};
+
+LIME.Geometry.prototype.offsetCenter = function(x, y) {
+   for(var i = 0; i < this.vertices.length/3; i++) {
+      this.vertices[0 + 3*i] += x;
+      this.vertices[1 + 3*i] += y;
+   }
+};
+
