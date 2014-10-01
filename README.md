@@ -11,12 +11,20 @@ Credits:
 
 Reference:
 ----
-I hosted the compiled file here: http://www.ecst.csuchico.edu/~shutt/lime.js
+I hosted the compiled file here: http://www.ecst.csuchico.edu/~shutt/lime1_1.js
 It can easily be referenced on a webpage using that link.
 
 Features so far:
 -----
-* Can draw very simple shapes
+1.0
+===
+* Can draw simple shapes
 * Color can be changed
-* Convert user mouse coordinate into webgl unit
 * Shapes can be scaled, rotated and translated
+* Shapes transformation can be animated
+
+1.1
+===
+* Shapes center can be moved
+* Flat color material doesn't need geometry input
+* Everything is prototyped
