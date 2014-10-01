@@ -89,6 +89,7 @@ function loadShader(gl, type, source) {
   if (!compiled) {
     var error = gl.getShaderInfoLog(shader);
     console.log('Failed to compile shader: ' + error);
+    console.log(source);
     gl.deleteShader(shader);
     return null;
   }
