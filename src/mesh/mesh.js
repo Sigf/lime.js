@@ -43,18 +43,9 @@ LIME.Shape = function(geometry, material, gl, drawType) {
    }
 
    this.vertexArray = this.geometry.getGeometry();
-
-   this.colorArray = this.material.getColorArray();
-
    this.vertexBuffer = gl.createBuffer();
    if(!this.vertexBuffer) {
       console.log("Failed to created vertex buffer object.");
-      return -1;
-   }
-
-   this.colorBuffer = gl.createBuffer();
-   if(!this.vertexBuffer) {
-      console.log("Failed to created color buffer object.");
       return -1;
    }
 
@@ -64,10 +55,18 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       return -1;
    }
 
-   this.a_Color = gl.getAttribLocation(this.material.getProgram(), 'a_Color');
-   if (this.a_Color < 0) {
-      console.log('Failed to get the storage location of a_Position');
-      return -1;
+   if(this.material.getType() == LIME.perPixelColorMaterial) {
+      this.colorArray = this.material.getColorArray();  
+      this.colorBuffer = gl.createBuffer();
+      if(!this.vertexBuffer) {
+         console.log("Failed to created color buffer object.");
+         return -1;
+      }
+      this.a_Color = gl.getAttribLocation(this.material.getProgram(), 'a_Color');
+      if (this.a_Color < 0) {
+         console.log('Failed to get the storage location of a_Position');
+         return -1;
+      }
    }
 }
 
@@ -113,10 +112,12 @@ LIME.Shape.prototype.draw = function(offset, frame_size) {
    gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
    gl.enableVertexAttribArray(this.a_Position);
 
-   gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
-   gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(this.a_Color);
+   if(this.material.getType() == LIME.perPixelColorMaterial) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
+      gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(this.a_Color);
+   }
 
    gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
    gl.drawArrays(this.drawType, offset  , n);
