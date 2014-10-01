@@ -1,17 +1,11 @@
  // TODO
- // Split this class into 2, make the flat shader using a non varying variable
- // for the color and hard code the color in the shader from input. So we don't
- // need to pass the geometry for every shapes if the color is the same per vertex.
- LIME.FlatShader = function(geometry, gl, r, g, b, a) {
+ LIME.PerPixelColorMaterial = function(geometry, gl) {
 
   this.context = gl;
   this.program;
   this.vertexColor = [];
-  this.red = r;
-  this.green = g;
-  this.blue = b;
-  this.alpha = a;
   this.n = geometry.getArraySize() / 3;
+  this.type = LIME.perPixelColorMaterial;
 
   var VSHADER_SOURCE = 
   'attribute vec4 a_Position;\n' +
@@ -41,17 +35,24 @@
   this.program = program;
 };
 
-LIME.FlatShader.prototype.getColorArray = function(n) {
-  for(var i = 0; i < this.n; i++)
-  {
-    this.vertexColor.push(this.red);
-    this.vertexColor.push(this.green);
-    this.vertexColor.push(this.blue);
-    this.vertexColor.push(this.alpha);
-  }
+LIME.PerPixelColorMaterial.prototype.getColorArray = function(n) {
   return new Float32Array(this.vertexColor);
 }
 
-LIME.FlatShader.prototype.getProgram = function() {
+LIME.PerPixelColorMaterial.prototype.setColorArray = function(arr) {
+  if(arr.length/4 != this.n) { 
+    console.log("Vertices and vertices color array mis-match!");
+  }
+
+  else {
+    this.vertexColor = arr.splice(0,arr.length);
+  }
+}
+
+LIME.PerPixelColorMaterial.prototype.getProgram = function() {
   return this.program;
+}
+
+LIME.PerPixelColorMaterial.prototype.getType = function() {
+  return this.type;
 }
