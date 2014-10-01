@@ -12,5 +12,5 @@ LIME.drawTriangleStrip = 5;
 LIME.drawTriangleFan = 6;
 
 // geometry type constants
-LIME.faltShader = 0;
-LIME.perPixelColorShader = 1;
+LIME.faltMaterial = 0;
+LIME.perPixelColorMaterial = 1;
