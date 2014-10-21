@@ -3,6 +3,7 @@ touch lime1_1.js
 cat ../lime.js >> lime1_1.js
 cat ../geometry/geometry.js >> lime1_1.js
 cat ../material/flatMaterial.js >> lime1_1.js
+cat ../material/flatTextureMaterial.js >> lime1_1.js
 cat ../material/perPixelColorMaterial.js >> lime1_1.js
 cat ../mesh/mesh.js >> lime1_1.js
 cat ../scene/canvasRenderer.js >> lime1_1.js

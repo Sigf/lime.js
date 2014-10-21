@@ -14,7 +14,8 @@ LIME.drawTriangleFan = 6;
 // geometry type constants
 LIME.faltMaterial = 0;
 LIME.perPixelColorMaterial = 1;
-LIME.Geometry = function(scene) {
+LIME.flatTextureMaterial = 2;
+LIME.currentTextureUnit = 0;LIME.Geometry = function(scene) {
    this.vertices = [];
    this.ratio = scene.getAspectRatio();
 };
@@ -160,7 +161,111 @@ LIME.FlatMaterial.prototype.getProgram = function() {
 LIME.FlatMaterial.prototype.getType = function() {
   return this.type;
 }
- // TODO
+ LIME.FlatTextureMaterial = function(gl, tex, index){
+
+  this.context = gl;
+  this.program;
+  this.texture_path = tex;
+  this.texture;
+  this.u_sampler;
+  this.image;
+  this.ready = false;
+  this.type = LIME.flatTextureMaterial;
+  this.texture_index = index;
+
+  var VSHADER_SOURCE = 
+  'attribute vec4 a_Position;\n' +
+  'attribute vec2 a_TexCoord;\n' +
+  'uniform mat4 u_ModelMatrix;\n' +
+  'varying vec2 v_TexCoord;\n' +
+  'void main() {\n' +
+  '  gl_Position = u_ModelMatrix * a_Position;\n' +
+  '  v_TexCoord = a_TexCoord;\n' +
+  '}\n';
+
+  var FSHADER_SOURCE =
+  '#ifdef GL_ES\n' +
+  'precision mediump float;\n' +
+  '#endif\n' +
+  'uniform sampler2D u_Sampler;\n' +
+  'varying vec2 v_TexCoord;\n' +
+  'void main() {\n' +
+  '  gl_FragColor = texture2D(u_Sampler, v_TexCoord);\n' +
+  '}\n';
+
+  var program = createProgram(this.context, VSHADER_SOURCE, FSHADER_SOURCE);
+  if (!program) {
+    console.log('Failed to create program');
+    return false; 
+  }
+  this.program = program;
+
+  this.initTexture();
+};
+
+LIME.FlatTextureMaterial.prototype.initTexture = function() {
+  var gl = this.context;
+  this.texture = gl.createTexture();
+  if(!this.texture) {
+    console.log("failed to create texture.");
+    return false;
+  }
+
+  this.u_sampler = gl.getUniformLocation(this.program, 'u_Sampler');
+  if(!this.u_sampler) {
+    console.log("failed to create storage location for u_sampler");
+    return false;
+  }
+
+  this.image = new Image();
+  if(!this.image) {  
+    console.log("failed to create image object.");
+    return false;
+  }
+  this.image.crossOrigin = "anonymous";
+  this.image.src = this.texture_path;
+
+  var index = this.texture_index;
+  var self = this;
+
+  loadTexture = function(this_index) {
+    self.ready = true;
+    self.texture_index = this_index;
+  }
+
+  this.image.onload = function(){loadTexture(index); };
+
+  return true;
+}
+
+LIME.FlatTextureMaterial.prototype.getProgram = function() {
+  return this.program;
+}
+
+LIME.FlatTextureMaterial.prototype.getType = function() {
+  return this.type;
+}
+
+LIME.FlatTextureMaterial.prototype.isReady = function() {
+  console.log("checking for texture to be ready:" + this.ready);
+  return this.ready;
+}
+
+LIME.FlatTextureMaterial.prototype.getTextureIndex = function() {
+  return this.texture_index;
+}
+
+LIME.FlatTextureMaterial.prototype.getTexture = function() {
+  return this.texture;
+}
+
+LIME.FlatTextureMaterial.prototype.getSampler = function() {
+  return this.u_sampler;
+}
+
+LIME.FlatTextureMaterial.prototype.getImage = function() {
+  return this.image;
+} // TODO
  LIME.PerPixelColorMaterial = function(geometry, gl) {
 
   this.context = gl;
@@ -223,6 +328,7 @@ LIME.Shape = function(geometry, material, gl, drawType) {
    this.y;
    this.z;
    this.hitbox = [];
+   this.texCoord;
    this.geometry = geometry;
    this.material = material;
    this.context = gl;
@@ -276,7 +382,7 @@ LIME.Shape = function(geometry, material, gl, drawType) {
    }
 
    if(this.material.getType() == LIME.perPixelColorMaterial) {
-      this.colorArray = this.material.getColorArray();
+      this.colorArray = this.material.getColorArray();  
       this.colorBuffer = gl.createBuffer();
       if(!this.vertexBuffer) {
          console.log("Failed to created color buffer object.");
@@ -285,6 +391,21 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       this.a_Color = gl.getAttribLocation(this.material.getProgram(), 'a_Color');
       if (this.a_Color < 0) {
          console.log('Failed to get the storage location of a_Position');
+         return -1;
+      }
+   }
+
+   else if(this.material.getType() == LIME.flatTextureMaterial) {
+
+      this.texCoordbuffer = gl.createBuffer();
+      if(!this.texCoordbuffer) {
+         console.log("failed to create texture coordinate buffer.");
+         return -1;
+      }
+
+      this.a_TexCoord = gl.getAttribLocation(this.material.getProgram(), 'a_TexCoord');
+      if(!this.a_TexCoord) {
+         console.log("failed to get the storage location for a_TexCoord.");
          return -1;
       }
    }
@@ -330,13 +451,33 @@ LIME.Shape.prototype.draw = function(offset, frame_size) {
    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, this.vertexArray, gl.STATIC_DRAW);
    gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(this.a_Position);
+   gl.enableVertexAttribArray(this.a_Position); 
 
    if(this.material.getType() == LIME.perPixelColorMaterial) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
       gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.a_Color);
+   }
+  
+   else if(this.material.getType() == LIME.flatTextureMaterial /*&& this.material.isReady()*/) {
+
+      if(this.texCoord == undefined) {
+         console.log("no texture coordinate set.");
+         return -1;
+      }
+      gl.activeTexture(gl.TEXTURE0 + this.material.getTextureIndex());
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+      gl.bindTexture(gl.TEXTURE_2D, this.material.getTexture());
+      gl.uniform1i(this.material.getSampler(), this.material.texture_index);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.material.getImage());
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordbuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, this.texCoord, gl.STATIC_DRAW);
+      gl.vertexAttribPointer(this.a_TexCoord, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(this.a_TexCoord);
    }
 
    gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
@@ -380,6 +521,10 @@ LIME.Shape.prototype.getLocation = function() {
 LIME.Shape.prototype.getHitbox = function() {
    return this.hitbox;
 };
+
+LIME.Shape.prototype.setTexCoord = function(arr) {
+   this.texCoord = new Float32Array(arr);
+}
 LIME.Scene = function (canvasName) {
   this.canvas = document.getElementById(canvasName);
   this.context = getWebGLContext(this.canvas);
@@ -411,19 +556,19 @@ LIME.Scene.prototype.getMouseCoordinate = function() {
 
   var canvas = this.canvas;
 
-  this.canvas.onmousemove = function(ev) {
-    var new_x = ev.clientX;
-    var new_y = ev.clientY;
+  this.canvas.onmousemove = function(ev ) {
+    x = ev.clientX;
+    y = ev.clientY;
 
     var rect = ev.target.getBoundingClientRect() ;
 
-    new_x = ((new_x - rect.left) - canvas.width/2)/(canvas.width/2);
-    new_y = (canvas.height/2 - (new_y - rect.top))/(canvas.height/2);
+    x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+    y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   }
-  console.log(new_x);
-  console.log(new_y);
- return [new_x, new_y];
-}; 
+  console.log(x);
+  console.log(y);
+ return [x, y];
+};
 
 LIME.Scene.prototype.getAspectRatio = function() {
   return [this.canvas.width/this.canvas.height, this.canvas.height/this.canvas.width];

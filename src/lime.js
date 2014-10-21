@@ -14,3 +14,5 @@ LIME.drawTriangleFan = 6;
 // geometry type constants
 LIME.faltMaterial = 0;
 LIME.perPixelColorMaterial = 1;
+LIME.flatTextureMaterial = 2;
+LIME.currentTextureUnit = 0;

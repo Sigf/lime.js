@@ -3,6 +3,7 @@ LIME.Shape = function(geometry, material, gl, drawType) {
    this.y;
    this.z;
    this.hitbox = [];
+   this.texCoord;
    this.geometry = geometry;
    this.material = material;
    this.context = gl;
@@ -68,6 +69,21 @@ LIME.Shape = function(geometry, material, gl, drawType) {
          return -1;
       }
    }
+
+   else if(this.material.getType() == LIME.flatTextureMaterial) {
+
+      this.texCoordbuffer = gl.createBuffer();
+      if(!this.texCoordbuffer) {
+         console.log("failed to create texture coordinate buffer.");
+         return -1;
+      }
+
+      this.a_TexCoord = gl.getAttribLocation(this.material.getProgram(), 'a_TexCoord');
+      if(!this.a_TexCoord) {
+         console.log("failed to get the storage location for a_TexCoord.");
+         return -1;
+      }
+   }
 }
 
 LIME.Shape.prototype.generateHitbox = function() {
@@ -110,13 +126,33 @@ LIME.Shape.prototype.draw = function(offset, frame_size) {
    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, this.vertexArray, gl.STATIC_DRAW);
    gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(this.a_Position);
+   gl.enableVertexAttribArray(this.a_Position); 
 
    if(this.material.getType() == LIME.perPixelColorMaterial) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
       gl.vertexAttribPointer(this.a_Color, 4, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.a_Color);
+   }
+  
+   else if(this.material.getType() == LIME.flatTextureMaterial /*&& this.material.isReady()*/) {
+
+      if(this.texCoord == undefined) {
+         console.log("no texture coordinate set.");
+         return -1;
+      }
+      gl.activeTexture(gl.TEXTURE0 + this.material.getTextureIndex());
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+      gl.bindTexture(gl.TEXTURE_2D, this.material.getTexture());
+      gl.uniform1i(this.material.getSampler(), this.material.texture_index);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.material.getImage());
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordbuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, this.texCoord, gl.STATIC_DRAW);
+      gl.vertexAttribPointer(this.a_TexCoord, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(this.a_TexCoord);
    }
 
    gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
@@ -160,3 +196,7 @@ LIME.Shape.prototype.getLocation = function() {
 LIME.Shape.prototype.getHitbox = function() {
    return this.hitbox;
 };
+
+LIME.Shape.prototype.setTexCoord = function(arr) {
+   this.texCoord = new Float32Array(arr);
+}
