@@ -1,6 +1,6 @@
 // @author Sebastien Hutt
 
-var LIME = { REVISION: '02' };
+var LIME = { REVISION: '03' };
 
 // draw type constants
 LIME.drawPoints = 0;
@@ -16,3 +16,8 @@ LIME.faltMaterial = 0;
 LIME.perPixelColorMaterial = 1;
 LIME.flatTextureMaterial = 2;
 LIME.currentTextureUnit = 0;
+
+// light types
+LIME.ambiant = 0;
+LIME.directional = 1;
+LIME.point = 2;

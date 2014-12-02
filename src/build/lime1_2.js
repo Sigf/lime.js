@@ -1,6 +1,6 @@
 // @author Sebastien Hutt
 
-var LIME = { REVISION: '02' };
+var LIME = { REVISION: '03' };
 
 // draw type constants
 LIME.drawPoints = 0;
@@ -16,8 +16,16 @@ LIME.faltMaterial = 0;
 LIME.perPixelColorMaterial = 1;
 LIME.flatTextureMaterial = 2;
 LIME.currentTextureUnit = 0;LIME.Geometry = function(scene) {
+   this.context = scene.getContext();
    this.vertices = [];
    this.ratio = scene.getAspectRatio();
+
+   var gl = this.context;
+   this.vertexBuffer = gl.createBuffer();
+   if(!this.vertexBuffer) {
+      console.log("Failed to created vertex buffer object.");
+      return -1;
+   }
 };
 
 LIME.Geometry.prototype.createRectangle = function(length, width, zOffset) {
@@ -29,6 +37,8 @@ LIME.Geometry.prototype.createRectangle = function(length, width, zOffset) {
    this.vertices.push(-(width/2), (length/2), zOffset);
    this.vertices.push((width/2), (length/2), zOffset);
    this.vertices.push((width/2), -(length/2), zOffset);
+
+   this.createBuffer();
 };
 
 LIME.Geometry.prototype.createTriangle = function(length, width, zOffset) {
@@ -39,6 +49,8 @@ LIME.Geometry.prototype.createTriangle = function(length, width, zOffset) {
    this.vertices.push(-(width/2), -(length/2), zOffset);    
    this.vertices.push((width/2), -(length/2), zOffset);
    this.vertices.push(0.0, (length/2), zOffset);
+
+   this.createBuffer();
 };
 
 LIME.Geometry.prototype.createCube = function(length, width, depth) {
@@ -77,6 +89,8 @@ LIME.Geometry.prototype.createCube = function(length, width, depth) {
    this.vertices.push(l, w, d);
    this.vertices.push(-l, w, -d);
    this.vertices.push(l, w, -d);
+
+   this.createBuffer();
 };
 
 LIME.Geometry.prototype.createCircle = function(radius, segments) {
@@ -89,6 +103,7 @@ LIME.Geometry.prototype.createCircle = function(radius, segments) {
       angle = ((2*Math.PI) / segments)*i;
       this.vertices.push(radius * Math.cos(angle), radius * Math.sin(angle), 0.0);
    }
+   this.createBuffer();
 };
 
 LIME.Geometry.prototype.addPoints = function(points, clear) {
@@ -96,21 +111,25 @@ LIME.Geometry.prototype.addPoints = function(points, clear) {
    for(var i = 0; i < points.length/3; i++) {
       this.vertices.push(points[0 + 3*i], points[1 + 3*i], points[2 + 3*i]);
    }
+   this.createBuffer();
 };
 
+LIME.Geometry.prototype.createBuffer = function() {
+   //var gl = this.context;
+   //gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+   //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+}
+
+LIME.Geometry.prototype.getBuffer = function() {
+   return this.vertexBuffer;
+}
+
 LIME.Geometry.prototype.getGeometry = function() {
-   //this.applyAspectRatio();
    return new Float32Array(this.vertices);
 };
 
 LIME.Geometry.prototype.getArraySize = function() {
    return this.vertices.length;
-};
-
-LIME.Geometry.prototype.applyAspectRatio = function() {
-   for(var i = 0; i < this.vertices.length/3; i++) {
-      this.vertices[0 + 3*i] *= this.ratio[1];
-   }
 };
 
 LIME.Geometry.prototype.offsetCenter = function(x, y) {
@@ -132,9 +151,9 @@ LIME.Geometry.prototype.offsetCenter = function(x, y) {
 
   var VSHADER_SOURCE = 
   'attribute vec4 a_Position;\n' +
-  'uniform mat4 u_ModelMatrix;\n' +
+  'uniform mat4 u_MvpMatrix;\n' +
   'void main() {\n' +
-  '  gl_Position = u_ModelMatrix * a_Position;\n' +
+  '  gl_Position = u_MvpMatrix * a_Position;\n' +
   '  gl_PointSize = 5.0;\n' +
   '}\n' ;
 
@@ -176,10 +195,10 @@ LIME.FlatMaterial.prototype.getType = function() {
   var VSHADER_SOURCE = 
   'attribute vec4 a_Position;\n' +
   'attribute vec2 a_TexCoord;\n' +
-  'uniform mat4 u_ModelMatrix;\n' +
+  'uniform mat4 u_MvpMatrix;\n' +
   'varying vec2 v_TexCoord;\n' +
   'void main() {\n' +
-  '  gl_Position = u_ModelMatrix * a_Position;\n' +
+  '  gl_Position = u_MvpMatrix * a_Position;\n' +
   '  v_TexCoord = a_TexCoord;\n' +
   '}\n';
 
@@ -276,11 +295,11 @@ LIME.FlatTextureMaterial.prototype.getImage = function() {
 
   var VSHADER_SOURCE = 
   'attribute vec4 a_Position;\n' +
-  'uniform mat4 u_ModelMatrix;\n' +
+  'uniform mat4 u_MvpMatrix;\n' +
   'attribute vec4 a_Color;\n' + 
   'varying vec4 v_Color;\n' +
   'void main() {\n' +
-  '  gl_Position = u_ModelMatrix * a_Position;\n' +
+  '  gl_Position = u_MvpMatrix * a_Position;\n' +
   '  v_Color = a_Color;\n' +
   '  gl_PointSize = 5.0;\n' +
   '}\n' ;
@@ -323,17 +342,22 @@ LIME.PerPixelColorMaterial.prototype.getProgram = function() {
 LIME.PerPixelColorMaterial.prototype.getType = function() {
   return this.type;
 }
-LIME.Shape = function(geometry, material, gl, drawType) {
+LIME.Shape = function(geometry, material, gl, drawType, camera) {
    this.x;
    this.y;
    this.z;
    this.hitbox = [];
    this.texCoord;
    this.geometry = geometry;
+   this.vertexArray = geometry.getGeometry();
    this.material = material;
    this.context = gl;
+   this.camera = camera;
    this.modelMatrix = new Matrix4();
-   this.u_ModelMatrix = this.context.getUniformLocation(material.getProgram(), 'u_ModelMatrix');
+   this.viewMatrix = this.camera.getViewMatrix();
+   this.projectionMatrix = this.camera.getProjectionMatrix();
+   this.mvpMatrix = new Matrix4();
+   //this.u_ModelMatrix = this.context.getUniformLocation(material.getProgram(), 'u_ModelMatrix');
 
    switch(drawType) {
       case 0:
@@ -368,7 +392,7 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       return;
    }
 
-   this.vertexArray = this.geometry.getGeometry();
+   //this.vertexBuffer = this.geometry.getBuffer();
    this.vertexBuffer = gl.createBuffer();
    if(!this.vertexBuffer) {
       console.log("Failed to created vertex buffer object.");
@@ -381,16 +405,22 @@ LIME.Shape = function(geometry, material, gl, drawType) {
       return -1;
    }
 
+   this.u_MvpMatrix = gl.getUniformLocation(this.material.getProgram(), 'u_MvpMatrix');
+   if(!this.u_MvpMatrix) {
+      console.log("Failed to get the storage location of u_MvpMatrix");
+      return -1;
+   }
+
    if(this.material.getType() == LIME.perPixelColorMaterial) {
       this.colorArray = this.material.getColorArray();  
       this.colorBuffer = gl.createBuffer();
-      if(!this.vertexBuffer) {
+      if(!this.colorBuffer) {
          console.log("Failed to created color buffer object.");
          return -1;
       }
       this.a_Color = gl.getAttribLocation(this.material.getProgram(), 'a_Color');
       if (this.a_Color < 0) {
-         console.log('Failed to get the storage location of a_Position');
+         console.log('Failed to get the storage location of a_Color');
          return -1;
       }
    }
@@ -409,6 +439,11 @@ LIME.Shape = function(geometry, material, gl, drawType) {
          return -1;
       }
    }
+
+   //gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+   //gl.bufferData(gl.ARRAY_BUFFER, this.geometry.getGeometry(), gl.STATIC_DRAW);
+   //gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
+   //gl.enableVertexAttribArray(this.a_Position);
 }
 
 LIME.Shape.prototype.generateHitbox = function() {
@@ -480,9 +515,9 @@ LIME.Shape.prototype.draw = function(offset, frame_size) {
       gl.vertexAttribPointer(this.a_TexCoord, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.a_TexCoord);
    }
-
-   gl.uniformMatrix4fv(this.u_ModelMatrix, false, this.modelMatrix.elements);
-   gl.drawArrays(this.drawType, offset  , n);
+   this.mvpMatrix.set(this.projectionMatrix).multiply(this.viewMatrix).multiply(this.modelMatrix);
+   gl.uniformMatrix4fv(this.u_MvpMatrix, false, this.mvpMatrix.elements);
+   gl.drawArrays(this.drawType, offset, n);
 };
 
 LIME.Shape.prototype.setRotation = function(angle, x, y, z){
@@ -572,9 +607,110 @@ LIME.Scene.prototype.getMouseCoordinate = function() {
 };
 
 LIME.Scene.prototype.getAspectRatio = function() {
-  return [this.canvas.width/this.canvas.height, this.canvas.height/this.canvas.width];
+  return [this.canvas.width/this.canvas.height];
 };
-// cuon-matrix.js (c) 2012 kanda and matsuda
+LIME.Camera = function(context) {
+	this.gl = context;
+
+	this.position = [0.0, 0.0, 0.0];
+	this.lookAt = [0.0, 0.0, 0.0];
+	this.up = [0.0, 1.0, 0.0];
+	this.angle = 0;
+
+	this.viewMatrix = new Matrix4();
+	this.projectionMatrix = new Matrix4();
+	this.viewMatrix.setLookAt(
+		this.position[0],
+		this.position[1],
+		this.position[2],
+		this.lookAt[0],
+		this.lookAt[1],
+		this.lookAt[2],
+		this.up[0],
+		this.up[1],
+		this.up[2]
+	);
+}
+
+LIME.Camera.prototype.refresh = function() {
+	this.viewMatrix.setLookAt(
+		this.position[0],
+		this.position[1],
+		this.position[2],
+		this.lookAt[0],
+		this.lookAt[1],
+		this.lookAt[2],
+		this.up[0],
+		this.up[1],
+		this.up[2]
+	);
+}
+
+LIME.Camera.prototype.lookAt = function(x,y,z) {
+
+	if(x === undefined) x = 0.0;
+	if(y === undefined) y = 0.0;
+	if(z === undefined) z = 0.0;
+
+	this.lookAt = [x, y, z];
+	this.refresh();
+}
+
+LIME.Camera.prototype.move = function(x,y,z) {
+
+	if(x === undefined) x = 0.0;
+	if(y === undefined) y = 0.0;
+	if(z === undefined) z = 0.0;
+
+	this.position = [x, y, z];
+	this.refresh();
+}
+
+LIME.Camera.prototype.setUp = function(x,y,z) {
+
+	if(x === undefined) x = 0.0;
+	if(y === undefined) y = 0.0;
+	if(z === undefined) z = 0.0;
+
+	this.up = [x, y, z];
+	this.refresh();
+}
+
+LIME.Camera.prototype.rotate = function(angle) {
+	angle = ((Math.PI * 2) / 360) * angle;
+	this.angle = angle;
+
+	var x = this.position[0] + (Math.sin(angle) * 3.0);
+	var y = this.position[1];
+	var z = this.position[2] + (Math.cos(angle) * 3.0);
+	this.lookAt = [x, y, z];
+	this.refresh();
+}
+
+LIME.Camera.prototype.moveForward = function(step, angle) {
+	angle = ((Math.PI * 2) / 360) * angle;
+	var x = this.position[0] + (Math.sin(this.angle + angle) * step);
+	var y = this.position[1];
+	var z = this.position[2] + (Math.cos(this.angle + angle) * step);
+	this.position = [x, y, z];
+	this.refresh();
+}
+
+LIME.Camera.prototype.setPerspective = function(fov, aspect, near, far) {
+	this.projectionMatrix.setPerspective(fov, aspect, near, far);
+}
+
+LIME.Camera.prototype.getViewMatrix = function() {
+	return this.viewMatrix;
+}
+
+LIME.Camera.prototype.getProjectionMatrix = function() {
+	return this.projectionMatrix;
+}
+
+LIME.Camera.prototype.getLookAt = function() {
+	return this.lookAt;
+}// cuon-matrix.js (c) 2012 kanda and matsuda
 /** 
  * This is a class treating 4x4 matrix.
  * This class contains the function that is equivalent to OpenGL matrix stack.

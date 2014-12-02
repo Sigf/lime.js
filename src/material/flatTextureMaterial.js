@@ -1,4 +1,4 @@
- LIME.FlatTextureMaterial = function(gl, tex, index){
+LIME.FlatTextureMaterial = function(gl, tex, index){
 
   this.context = gl;
   this.program;
@@ -13,10 +13,10 @@
   var VSHADER_SOURCE = 
   'attribute vec4 a_Position;\n' +
   'attribute vec2 a_TexCoord;\n' +
-  'uniform mat4 u_ModelMatrix;\n' +
+  'uniform mat4 u_MvpMatrix;\n' +
   'varying vec2 v_TexCoord;\n' +
   'void main() {\n' +
-  '  gl_Position = u_ModelMatrix * a_Position;\n' +
+  '  gl_Position = u_MvpMatrix * a_Position;\n' +
   '  v_TexCoord = a_TexCoord;\n' +
   '}\n';
 
@@ -71,35 +71,33 @@ LIME.FlatTextureMaterial.prototype.initTexture = function() {
   }
 
   this.image.onload = function(){loadTexture(index); };
-
   return true;
-}
+};
 
 LIME.FlatTextureMaterial.prototype.getProgram = function() {
   return this.program;
-}
+};
 
 LIME.FlatTextureMaterial.prototype.getType = function() {
   return this.type;
-}
+};
 
 LIME.FlatTextureMaterial.prototype.isReady = function() {
-  console.log("checking for texture to be ready:" + this.ready);
   return this.ready;
-}
+};
 
 LIME.FlatTextureMaterial.prototype.getTextureIndex = function() {
   return this.texture_index;
-}
+};
 
 LIME.FlatTextureMaterial.prototype.getTexture = function() {
   return this.texture;
-}
+};
 
 LIME.FlatTextureMaterial.prototype.getSampler = function() {
   return this.u_sampler;
-}
+};
 
 LIME.FlatTextureMaterial.prototype.getImage = function() {
   return this.image;
-}
+};

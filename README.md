@@ -28,3 +28,15 @@ Features so far:
 * Shapes center can be moved
 * Flat color material doesn't need geometry input
 * Everything is prototyped
+
+1.2
+===
+* Adds texture materials
+
+1.3
+===
+* Adds Cameras! Can be set to perspective and edit the up vector, lookat and position
+* Cameras can be set to look at cursor and move toward it, aka first person controls
+* The draw calls for shapes are more efficient by moving some function calls to init stage
+* Adds more example
+* Adds lights
