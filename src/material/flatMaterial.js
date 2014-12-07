@@ -17,6 +17,7 @@ LIME.FlatMaterial = function(gl, r, g, b, a, lighting) {
     'attribute vec4 a_Position;\n' +
     'attribute vec4 a_Normal;\n' +
     'uniform vec4 u_Color;\n' +
+    'uniform vec4 u_Ambient;\n' +
     'uniform mat4 u_MvpMatrix;\n' +
     'uniform mat4 u_NormalMatrix;\n' +
     'uniform vec3 u_LightColor;\n' +
@@ -75,6 +76,7 @@ LIME.FlatMaterial = function(gl, r, g, b, a, lighting) {
   this.a_Normal = createAttribLocation(gl, this.program, 'a_Normal');
 
   this.u_Color = createUniformLocation(gl, this.program, 'u_Color');
+  this.u_Ambient = createUniformLocation(gl, this.program, 'u_Ambient');
   this.u_MvpMatrix = createUniformLocation(gl, this.program, 'u_Color');
   this.u_NormalMatrix = createUniformLocation(gl, this.program, 'u_Color');
   this.u_LightColor = createUniformLocation(gl, this.program, 'u_Color');
