@@ -2,9 +2,9 @@
 // - Add default values
 
 LIME.Light = function(type) {
-  this.direction = [];
-  this.light_color = [];
-  this.position = [];
+  this.direction = [0.0, -1.0, 0.0];
+  this.light_color = [1.0, 1.0, 1.0];
+  this.position = [0.0, 0.0, 0.0];
   this.type = type;
 };
 
