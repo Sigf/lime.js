@@ -77,3 +77,4 @@ LIME.Scene.prototype.getContext = function() {
 LIME.Scene.prototype.getCanvas = function() {
   return this.canvas;
 };
+

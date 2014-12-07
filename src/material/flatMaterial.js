@@ -6,7 +6,7 @@ LIME.FlatMaterial = function(gl, r, g, b, a, lighting) {
   this.green = g;
   this.blue = b;
   this.alpha = a;
-  this.type = LIME.flatShader;
+  this.type = LIME.flatMaterial;
   this.isLit = lighting;
   
   if(this.isLit) {
@@ -70,3 +70,4 @@ LIME.FlatMaterial.prototype.getProgram = function() {
 LIME.FlatMaterial.prototype.getType = function() {
   return this.type;
 };
+

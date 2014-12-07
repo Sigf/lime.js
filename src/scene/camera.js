@@ -38,7 +38,7 @@ LIME.Camera.prototype.refresh = function() {
   );
 };
 
-LIME.Camera.prototype.lookAt = function(x,y,z) {
+LIME.Camera.prototype.setLookAt = function(x,y,z) {
 
   if(x === undefined) x = 0.0;
   if(y === undefined) y = 0.0;
@@ -141,3 +141,4 @@ LIME.Camera.prototype.getLookAt = function() {
 LIME.Camera.prototype.getPosition = function() {
   return this.position;
 };
+

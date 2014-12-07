@@ -94,3 +94,4 @@ LIME.PerPixelColorMaterial.prototype.getColorBuffer = function() {
 LIME.PerPixelColorMaterial.prototype.getType = function() {
   return this.type;
 };
+

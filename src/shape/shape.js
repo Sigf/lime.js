@@ -16,6 +16,7 @@ LIME.Shape = function(geometry, material, gl, drawType, camera, uv_set) {
    this.viewMatrix = this.camera.getViewMatrix();
    this.projectionMatrix = this.camera.getProjectionMatrix();
    this.mvpMatrix = new Matrix4();
+   this.modelViewMatrix = new Matrix4();
    //this.u_ModelMatrix = this.context.getUniformLocation(material.getProgram(), 'u_ModelMatrix');
 
    switch(drawType) {
@@ -70,7 +71,7 @@ LIME.Shape = function(geometry, material, gl, drawType, camera, uv_set) {
       return -1;
    }
 
-   if(this.material.isLit) {
+   if(this.material.isLit || this.material.type == LIME.PhongShader) {
     this.normalsBuffer = gl.createBuffer();
     this.a_Normal = gl.getAttribLocation(this.material.getProgram(), 'a_Normal');
     if(this.a_Normal < 0) {
@@ -123,7 +124,9 @@ LIME.Shape = function(geometry, material, gl, drawType, camera, uv_set) {
    }
 
    gl.bufferData(gl.ARRAY_BUFFER, this.geometry.getGeometry(), gl.STATIC_DRAW);
-   gl.enableVertexAttribArray(this.a_Position);
+
+   if(this.material.type == LIME.PhongShader) gl.enableVertexAttribArray(this.material.a_Position);
+   else gl.enableVertexAttribArray(this.a_Position);
 
     if(this.material.getType() == LIME.perPixelColorMaterial) {
       //gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
@@ -178,6 +181,45 @@ LIME.Shape.prototype.draw = function(light, offset, frame_size) {
 
    gl.useProgram(this.material.getProgram());
 
+   if(this.material.type == LIME.PhongShader) {
+      var lightColor = light.getColor();
+      var lightDirection = light.getDirection();
+      //var lightPosition = light.getPosition();
+
+      var lightPosition = new Vector3([10.0, 10.0, 10.0]);
+      var lightSpec = new Vector3([1.0, 1.0, 1.0]);
+      var lightAmbient = new Vector3([0.3, 0.3, 0.3]);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+      gl.vertexAttribPointer(this.material.a_Position, 3, gl.FLOAT, false, 0, 0);
+
+      gl.uniform3fv(this.material.u_Ld, lightColor.elements);
+      gl.uniform3fv(this.material.u_Ls, lightSpec.elements);
+      gl.uniform3fv(this.material.u_La, lightAmbient.elements);
+
+      gl.uniform3fv(this.material.u_Kd, this.material.Kd.elements);
+      gl.uniform3fv(this.material.u_Ks, this.material.Ks.elements);
+      gl.uniform3fv(this.material.u_Ka, this.material.Ka.elements);
+
+      gl.uniform1f(this.material.u_Shininess, this.material.shine);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);//
+      gl.vertexAttribPointer(this.material.a_Normal, 3, gl.FLOAT, false, 0, 0);//?
+      gl.enableVertexAttribArray(this.material.a_Normal);//?
+
+      this.mvpMatrix.set(this.projectionMatrix).multiply(this.viewMatrix).multiply(this.modelMatrix);
+      this.modelViewMatrix.set(this.viewMatrix).multiply(this.modelMatrix);
+      gl.uniformMatrix4fv(this.material.u_MvpMatrix, false, this.mvpMatrix.elements);
+      gl.uniformMatrix4fv(this.material.u_NormalMatrix, false, this.normalMatrix.elements);
+      gl.uniformMatrix4fv(this.material.u_ModelViewMatrix, false, this.modelViewMatrix.elements);
+      //gl.uniformMatrix4fv(this.material.u_ProjectionMatrix, false, this.projectionMatrix.elements);
+
+      gl.drawArrays(this.drawType, offset, n);
+
+      return 1;
+   }
+
    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
    gl.vertexAttribPointer(this.a_Position, 3, gl.FLOAT, false, 0, 0);
 
@@ -190,9 +232,9 @@ LIME.Shape.prototype.draw = function(light, offset, frame_size) {
     var lightColor = light.getColor();
     var lightDirection = light.getDirection();
   
-  gl.uniform3f(this.u_LightColor, lightColor[0], lightColor[1], lightColor[2]);
+    gl.uniform3fv(this.u_LightColor, lightColor.elements);
     gl.uniform3fv(this.u_LightDirection, lightDirection.elements);
-  gl.uniformMatrix4fv(this.u_NormalMatrix, false, this.normalMatrix.elements);
+    gl.uniformMatrix4fv(this.u_NormalMatrix, false, this.normalMatrix.elements);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);//
@@ -281,3 +323,4 @@ LIME.Shape.prototype.getHitbox = function() {
 LIME.Shape.prototype.setTexCoord = function(arr) {
    this.texCoord = new Float32Array(arr);
 };
+

@@ -40,3 +40,8 @@ Features so far:
 * The draw calls for shapes are more efficient by moving some function calls to init stage
 * Adds more example
 * Adds lights
+
+1.4
+===
+* Major Changes on how the different classes work. This update is mostly cleanup.
+* Adds Phong material

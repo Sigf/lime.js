@@ -168,6 +168,11 @@ LIME.Geometry.prototype.createCircle = function(radius, segments) {
    this.createBuffer();
 };
 
+LIME.Geometry.prototype.points_from_array = function(arr) {
+   this.vertices = arr.splice(0,arr.length);
+   this.createBuffer();
+};
+
 LIME.Geometry.prototype.addPoints = function(points, clear) {
    if (clear) this.vertices = [];
    for(var i = 0; i < points.length/3; i++) {
@@ -214,3 +219,4 @@ LIME.Geometry.prototype.offsetCenter = function(x, y) {
       this.vertices[1 + 3*i] += y;
    }
 };
+

@@ -101,3 +101,4 @@ LIME.FlatTextureMaterial.prototype.getSampler = function() {
 LIME.FlatTextureMaterial.prototype.getImage = function() {
   return this.image;
 };
+
