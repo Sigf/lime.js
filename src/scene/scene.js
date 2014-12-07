@@ -1,3 +1,7 @@
+// TODO
+// - Add ambient light factor for scene
+// - Handle multiple lights?
+
 LIME.Scene = function (canvasName) {
   this.canvas = document.getElementById(canvasName);
   this.context = getWebGLContext(this.canvas);
@@ -44,22 +48,6 @@ LIME.Scene.prototype.draw = function() {
       this.scene_objects[j].draw(this.scene_lights[0]);
     }
 
-
-  /*
-  if(this.scene_lights.length == 0) {
-    for(var j = 0; j < this.scene_objects.length; j++) {
-      this.scene_objects[j].draw();
-    }
-  }
-
-  else {
-    for(var i = 0; i < this.scene_objects.length; i++) {
-      for(var j = 0; j < this.scene_lights.length; j++) {
-        this.scene_objects[i].draw(this.scene_lights[j]);
-      }
-    }
-  }
-  */
 };
 
 LIME.Scene.prototype.getMouseCoordinate = function() {

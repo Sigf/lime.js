@@ -7,7 +7,7 @@ cat ../material/flatTextureMaterial.js >> lime1_4.js
 cat ../material/perPixelColorMaterial.js >> lime1_4.js
 cat ../material/phong_perVertex.js >> lime1_4.js
 cat ../shape/shape.js >> lime1_4.js
-cat ../scene/canvasRenderer.js >> lime1_4.js
+cat ../scene/scene.js >> lime1_4.js
 cat ../scene/camera.js >> lime1_4.js
 cat ../scene/light.js >> lime1_4.js
 cat ../utils/cuon-matrix.js >> lime1_4.js

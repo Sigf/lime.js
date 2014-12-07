@@ -1,12 +1,10 @@
+// TODO
+// 
+
 LIME.PhongMaterial = function(gl, Kd_r, Kd_g, Kd_b, Ka_r, Ka_g, Ka_b, Ks_r, Ks_g, Ks_b, sh) {
   this.context = gl;
   this.program;
   this.Ka = new Vector3([Ka_r, Ka_g, Ka_b]);
-  console.log(Ka_r);
-  console.log(Ka_g);
-  console.log(Ka_b);
-  console.log(this.Ka.elements);
-  console.log("-----------------");
   this.Kd = new Vector3([Kd_r, Kd_g, Kd_b]);
   this.Ks = new Vector3([Ks_r, Ks_g, Ks_b]);
   this.shine = sh;
@@ -35,7 +33,6 @@ LIME.PhongMaterial = function(gl, Kd_r, Kd_g, Kd_b, Ka_r, Ka_g, Ka_b, Ks_r, Ks_g
   'uniform mat4 u_MvpMatrix;\n' +
   'uniform mat4 u_NormalMatrix;\n' +
   'uniform mat4 u_ModelViewMatrix;\n' +
-  //'uniform mat4 u_ProjectionMatrix;\n' +
 
   'uniform vec3 u_La;\n' +
   'uniform vec3 u_Ld;\n' +
@@ -63,7 +60,6 @@ LIME.PhongMaterial = function(gl, Kd_r, Kd_g, Kd_b, Ka_r, Ka_g, Ka_b, Ks_r, Ks_g
   '    spec = u_Ls * u_Ks * pow(max(dot(r,v), 0.0), u_Shininess);\n' +
 
   '  v_LightItensity = ambient + diffuse + spec;\n' +
-  //'  v_LightItensity = spec;\n' +
 
   '  gl_Position = u_MvpMatrix * a_Position;\n' +
   '}\n' ;
@@ -111,12 +107,6 @@ LIME.PhongMaterial = function(gl, Kd_r, Kd_g, Kd_b, Ka_r, Ka_g, Ka_b, Ks_r, Ks_g
       console.log("Failed to get the storage location of u_ModelViewMatrix");
       return -1;
    }
-
-  /*this.u_ProjectionMatrix = gl.getUniformLocation(this.program, 'u_ProjectionMatrix');
-   if(!this.u_ProjectionMatrix) {
-      console.log("Failed to get the storage location of u_ProjectionMatrix");
-      return -1;
-   }*/
 
   this.u_La = gl.getUniformLocation(this.program, 'u_La');
    if(!this.u_La) {

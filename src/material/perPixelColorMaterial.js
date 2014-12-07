@@ -1,3 +1,7 @@
+// TODO
+// - Add uniform for ambient light
+// - Add uniform declaration in class 
+
 LIME.PerPixelColorMaterial = function(geometry, gl, lighting) {
 
   this.context = gl;

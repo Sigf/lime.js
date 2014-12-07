@@ -1,3 +1,8 @@
+// TODO
+// - Clearly decouple init stage from draw stage
+// - Offload the uniform declarations on the material object
+// - Create clear functions in init and draw for each materials
+
 LIME.Shape = function(geometry, material, gl, drawType, camera, uv_set) {
    this.x;
    this.y;
@@ -17,7 +22,6 @@ LIME.Shape = function(geometry, material, gl, drawType, camera, uv_set) {
    this.projectionMatrix = this.camera.getProjectionMatrix();
    this.mvpMatrix = new Matrix4();
    this.modelViewMatrix = new Matrix4();
-   //this.u_ModelMatrix = this.context.getUniformLocation(material.getProgram(), 'u_ModelMatrix');
 
    switch(drawType) {
       case 0:
@@ -53,11 +57,6 @@ LIME.Shape = function(geometry, material, gl, drawType, camera, uv_set) {
    }
 
    this.vertexBuffer = this.geometry.getBuffer();
-   /*this.vertexBuffer = gl.createBuffer();
-   if(!this.vertexBuffer) {
-      console.log("Failed to created vertex buffer object.");
-      return -1;
-   }*/
 
    this.a_Position = gl.getAttribLocation(this.material.getProgram(), 'a_Position');
    if (this.a_Position < 0) {
@@ -128,47 +127,13 @@ LIME.Shape = function(geometry, material, gl, drawType, camera, uv_set) {
    if(this.material.type == LIME.PhongShader) gl.enableVertexAttribArray(this.material.a_Position);
    else gl.enableVertexAttribArray(this.a_Position);
 
-    if(this.material.getType() == LIME.perPixelColorMaterial) {
-      //gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
-      //gl.enableVertexAttribArray(this.a_Color);
-    }
-
-    if(this.material.getType() == LIME.flatTextureMaterial) {
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);//
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);//
-      gl.bindTexture(gl.TEXTURE_2D, this.material.getTexture());
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);//
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);//
-
-    }
-};
-
-LIME.Shape.prototype.generateHitbox = function() {
-   /*var min_x = 0.0;
-   var min_y = 0.0;
-   var max_x = 0.0;
-   var max_y = 0.0;
-
-   var points = this.geometry.getGeometry();
-
-   for(var i = 0; i < points.length/3; i++) {
-      if((points[0 + (3*i)] + this.x) > max_x) max_x = points[0 + (3*i)];
-      if((points[0 + (3*i)] + this.x) < min_x) min_x = points[0 + (3*i)];
-      if((points[1 + (3*i)] + this.y) < min_y) min_y = points[0 + (3*i)];
-        if((points[1 + (3*i)] + this.y) < min_y) min_y = points[0 + (3*i)];
+   if(this.material.getType() == LIME.flatTextureMaterial) {
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);//
+     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);//
+     gl.bindTexture(gl.TEXTURE_2D, this.material.getTexture());
+     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);//
+     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);//
    }
-
-   this.hitbox.push(min_x);
-   this.hitbox.push(min_y);
-   this.hitbox.push(max_x);
-   this.hitbox.push(max_y);*/
-
-   this.hitbox = [];
-
-   this.hitbox.push(this.x);
-   this.hitbox.push(this.y);
-   this.hitbox.push(this.x + 0.16);
-   this.hitbox.push(this.y + 0.1);
 };
 
 LIME.Shape.prototype.draw = function(light, offset, frame_size) {
@@ -213,7 +178,6 @@ LIME.Shape.prototype.draw = function(light, offset, frame_size) {
       gl.uniformMatrix4fv(this.material.u_MvpMatrix, false, this.mvpMatrix.elements);
       gl.uniformMatrix4fv(this.material.u_NormalMatrix, false, this.normalMatrix.elements);
       gl.uniformMatrix4fv(this.material.u_ModelViewMatrix, false, this.modelViewMatrix.elements);
-      //gl.uniformMatrix4fv(this.material.u_ProjectionMatrix, false, this.projectionMatrix.elements);
 
       gl.drawArrays(this.drawType, offset, n);
 
@@ -314,10 +278,6 @@ LIME.Shape.prototype.scale = function(x, y, z){
 
 LIME.Shape.prototype.getLocation = function() {
    return [this.x, this.y, this.z];
-};
-
-LIME.Shape.prototype.getHitbox = function() {
-   return this.hitbox;
 };
 
 LIME.Shape.prototype.setTexCoord = function(arr) {

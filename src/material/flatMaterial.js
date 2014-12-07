@@ -1,3 +1,8 @@
+// TODO
+// - Add uniform for a_Color instead of concatenate
+// - Add uniform for ambient light
+// - Add uniform declaration in class
+
 LIME.FlatMaterial = function(gl, r, g, b, a, lighting) {
 
   this.context = gl;

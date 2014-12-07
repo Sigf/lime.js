@@ -1,3 +1,6 @@
+// TODO
+// - Add uniform declaration in class
+
 LIME.FlatTextureMaterial = function(gl, tex, index){
 
   this.context = gl;
