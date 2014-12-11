@@ -8,12 +8,12 @@ createAttribLocation = function(gl, program, name) {
 }
 
 createUniformLocation = function(gl, program, name) {
-	attrib_pointer = gl.getUniformLocation(program, name);
-	   if (!attrib_pointer) {
+	uni_pointer = gl.getUniformLocation(program, name);
+	   if (!uni_pointer) {
 	      console.log('Failed to get the storage location of ' + name + ');');
 	      return 0;
 	   }
-	return attrib_pointer;
+	return uni_pointer;
 }
 
 hexToColorArray = function(str) {
