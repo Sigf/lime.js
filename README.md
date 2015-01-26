@@ -11,7 +11,7 @@ Credits:
 
 Reference:
 ----
-I hosted the compiled file here: http://www.ecst.csuchico.edu/~shutt/lime1_1.js
+I hosted the compiled file here: http://www.ecst.csuchico.edu/~shutt/lime1_4.js
 It can easily be referenced on a webpage using that link.
 
 Features so far:
